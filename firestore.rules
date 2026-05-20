@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isAdminEmail(email) {
+      return email in ['admin@pass.com', 'arthur@gmail.com', 'arthurdaniel1209@gmail.com'];
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'role'])
+        && data.keys().size() == 4
+        && data.id == request.auth.uid
+        && data.email == request.auth.token.email
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && (
+          (data.role == 'admin' && isAdminEmail(request.auth.token.email)) ||
+          data.role == 'customer'
+        );
+    }
+
+    // --- CEO Config Validation ---
+    function isValidCEOConfig(data) {
+      return data.keys().hasAll(['name', 'title', 'handle', 'status', 'description', 'avatarUrl', 'behindGlowColor', 'innerGradient', 'updatedAt'])
+        && data.keys().size() == 9
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 100
+        && data.handle is string && data.handle.size() > 0 && data.handle.size() <= 100
+        && data.status is string && data.status.size() > 0 && data.status.size() <= 100
+        && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
+        && data.avatarUrl is string && data.avatarUrl.size() > 0 && data.avatarUrl.size() <= 1000
+        && data.behindGlowColor is string && data.behindGlowColor.size() > 0 && data.behindGlowColor.size() <= 100
+        && data.innerGradient is string && data.innerGradient.size() > 0 && data.innerGradient.size() <= 1000
+        // During create or update, updatedAt must match request.time or be a valid server-set field
+        && (data.updatedAt == request.time || data.updatedAt is string);
+    }
+
+    // --- Product Validation ---
+    function isValidProduct(data) {
+      return data.keys().hasAll(['id', 'name', 'description', 'price', 'category_id', 'is_active', 'images', 'sizes'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.description is string && data.description.size() <= 5000
+        && data.price is number && data.price >= 0
+        && data.category_id is string && data.category_id.size() <= 128
+        && data.is_active is bool
+        && data.images is list && data.images.size() <= 10
+        && data.sizes is list && data.sizes.size() <= 10;
+    }
+
+    // --- Category Validation ---
+    function isValidCategory(data) {
+      return data.keys().hasAll(['id', 'name', 'description'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.description is string && data.description.size() <= 1000;
+    }
+
+    // --- Order Validation ---
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'user_id', 'items', 'total', 'status', 'address', 'paymentMethod', 'created_at'])
+        && data.id is string && data.id.size() <= 128
+        && data.user_id == request.auth.uid
+        && data.total is number && data.total >= 0
+        && data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+        && data.address is map
+        && data.paymentMethod in ['card', 'pix', 'boleto']
+        && data.created_at is string;
+    }
+
+    // --- Notification Validation ---
+    function isValidNotification(data) {
+      return data.keys().hasAll(['user_id', 'title', 'message', 'type', 'read', 'created_at'])
+        && data.user_id is string && data.user_id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.message is string && data.message.size() > 0 && data.message.size() <= 1000
+        && data.type in ['order_status', 'general']
+        && data.read is bool
+        && data.created_at is string;
+    }
+
+    // --- Match Rules ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      // Prevent role modification during user profile updates (only admins can change roles)
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) && (
+        (incoming().diff(existing()).affectedKeys().hasOnly(['name']) || isAdmin())
+      );
+    }
+
+    match /ceo/config {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidCEOConfig(incoming());
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidProduct(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{catId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidCategory(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidOrder(incoming());
+      allow update: if isAdmin(); // Admin updates status
+    }
+
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isAdmin() && isValidNotification(incoming());
+      allow update: if isSignedIn() && resource.data.user_id == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+    }
+  }
+}

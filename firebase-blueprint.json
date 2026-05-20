@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "CEOConfig": {
+      "title": "CEO Configuration",
+      "description": "Configuration for the CEO section on the landing page",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The CEO's full name" },
+        "title": { "type": "string", "description": "The CEO's professional title" },
+        "handle": { "type": "string", "description": "Instagram handle" },
+        "status": { "type": "string", "description": "Current status/tagline" },
+        "description": { "type": "string", "description": "Detailed vision/description" },
+        "avatarUrl": { "type": "string", "description": "URL for the profile card image" },
+        "behindGlowColor": { "type": "string", "description": "CSS color for the behind glow effect" },
+        "innerGradient": { "type": "string", "description": "CSS gradient for the profile card" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["name", "title", "handle", "status", "description", "avatarUrl", "behindGlowColor", "innerGradient", "updatedAt"]
+    },
+    "Admin": {
+      "title": "Admin User",
+      "description": "Authenticated admin user",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "User email" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "ceo/config": {
+      "schema": "CEOConfig",
+      "description": "Singleton configuration document for the CEO section"
+    },
+    "admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Whitelist of admin user IDs"
+    }
+  }
+}
