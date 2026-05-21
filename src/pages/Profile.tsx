@@ -8,15 +8,17 @@ import { logout } from '../lib/firebase';
 import { cn } from '../lib/utils';
 
 export default function Profile() {
-  const { user, favorites, orders } = useAppContext();
+  const { user, favorites, orders, showToast } = useAppContext();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await logout();
+      showToast('Sessão encerrada com sucesso.', 'info');
       navigate('/');
     } catch (error) {
       console.error(error);
+      showToast('Erro ao encerrar sessão.', 'error');
     }
   };
 

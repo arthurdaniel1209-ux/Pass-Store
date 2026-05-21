@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { compressImage } from '../lib/compressImage';
+import { uploadToStorage } from '../lib/firebase';
 
 export default function AdminDashboard() {
   const { products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, ceoConfig, updateCEOConfig } = useAppContext();
@@ -86,16 +87,32 @@ export default function AdminDashboard() {
     try {
       // Compress image client-side to ensure lightweight upload
       const compressedBlob = await compressImage(file);
-      const formData = new FormData();
-      formData.append('image', compressedBlob);
+      
+      let imageUrl = '';
+      try {
+        // Try uploading to Firebase Storage first
+        imageUrl = await uploadToStorage(compressedBlob, 'ceo');
+        console.log("Uploaded successfully to Firebase Storage (ceo):", imageUrl);
+      } catch (storageError) {
+        console.warn("Firebase Storage failed (ceo), falling back to local server upload:", storageError);
+        // Fallback to local server /api/upload
+        const formData = new FormData();
+        formData.append('image', compressedBlob);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      if (data.url) {
-        setCeoFormData(prev => ({ ...prev, avatarUrl: data.url }));
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        if (data.url) {
+          imageUrl = data.url;
+        } else {
+          throw new Error("Local upload failed as well");
+        }
+      }
+
+      if (imageUrl) {
+        setCeoFormData(prev => ({ ...prev, avatarUrl: imageUrl }));
         showNotification('Foto do CEO atualizada!', 'success');
       }
     } catch (error) {
@@ -121,32 +138,46 @@ export default function AdminDashboard() {
         
         // Compress image client-side to ensure lightweight and fast upload
         const compressedBlob = await compressImage(file);
-        const uploadForm = new FormData();
-        uploadForm.append('image', compressedBlob);
+        
+        let imageUrl = '';
+        try {
+          // Try uploading to Firebase Storage first
+          imageUrl = await uploadToStorage(compressedBlob, 'products');
+          console.log("Uploaded successfully to Firebase Storage (product):", imageUrl);
+        } catch (storageError) {
+          console.warn("Firebase Storage failed (product), falling back to local server upload:", storageError);
+          // Fallback to local server /api/upload
+          const uploadForm = new FormData();
+          uploadForm.append('image', compressedBlob);
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: uploadForm,
-        });
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: uploadForm,
+          });
 
-        const data = await response.json().catch(() => null);
+          const data = await response.json().catch(() => null);
 
-        if (!response.ok) {
-          const errorMsg = data?.error || 'Falha ao enviar arquivo';
-          throw new Error(errorMsg);
+          if (!response.ok) {
+            const errorMsg = data?.error || 'Falha ao enviar arquivo';
+            throw new Error(errorMsg);
+          }
+
+          if (data && data.url) {
+            imageUrl = data.url;
+          }
         }
 
-        if (data && data.url) {
+        if (imageUrl) {
           if (index !== undefined && i === 0) {
             newImages[index] = {
               ...newImages[index],
-              url: data.url
+              url: imageUrl
             };
           } else {
             newImages.push({
               id: Math.random().toString(),
               product_id: '',
-              url: data.url,
+              url: imageUrl,
               is_primary: newImages.length === 0
             });
           }

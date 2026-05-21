@@ -8,7 +8,7 @@ import { UserRole } from '../types';
 import BubbleMenu from './BubbleMenu';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, cart, setUser, notifications, markNotificationAsRead } = useAppContext();
+  const { user, cart, setUser, notifications, markNotificationAsRead, showToast } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -30,6 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     setUser(null);
+    showToast('Sessão encerrada com sucesso.', 'info');
     navigate('/');
   };
   return (

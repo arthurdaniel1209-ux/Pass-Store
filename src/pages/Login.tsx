@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { loginWithGoogle, loginWithEmail, registerWithEmail } from '../lib/firebase';
 import { ArrowRight, Chrome, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 export default function Login() {
+  const { showToast } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
@@ -20,10 +22,13 @@ export default function Login() {
     setError(null);
     try {
       await loginWithGoogle();
+      showToast('Bem-vindo(a) à PASS!', 'success');
       navigate('/home');
     } catch (err: any) {
       console.error(err);
-      setError('Erro ao entrar com Google. Tente novamente.');
+      const msg = 'Erro ao entrar com Google. Tente novamente.';
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -38,13 +43,18 @@ export default function Login() {
     try {
       if (isRegistering) {
         await registerWithEmail(email, password);
-        setSuccess('Link de verificação enviado! Verifique seu e-mail para continuar.');
+        const successMsg = 'Link de verificação enviado! Verifique seu e-mail para continuar.';
+        setSuccess(successMsg);
+        showToast('Sucesso! Link de verificação enviado.', 'success');
         setIsRegistering(false);
       } else {
         const user = await loginWithEmail(email, password);
         if (!user.emailVerified) {
-          setError('Por favor, verifique seu e-mail antes de entrar.');
+          const warnMsg = 'Por favor, verifique seu e-mail antes de entrar.';
+          setError(warnMsg);
+          showToast(warnMsg, 'warning');
         } else {
+          showToast('Bem-vindo(a) de volta à PASS!', 'success');
           navigate('/home');
         }
       }
@@ -52,20 +62,21 @@ export default function Login() {
       console.error(err);
       const errorCode = err.code || '';
       const errorMessage = err.message || '';
+      let msg = 'Ocorreu um erro ao processar sua solicitação. Tente novamente.';
       
       if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential' || errorMessage.includes('auth/invalid-credential')) {
-        setError('E-mail ou senha incorretos. Por favor, verifique seus dados.');
+        msg = 'E-mail ou senha incorretos. Por favor, verifique seus dados.';
       } else if (errorCode === 'auth/email-already-in-use' || errorMessage.includes('auth/email-already-in-use')) {
-        setError('Este e-mail já está em uso. Tente fazer login ou use outro e-mail.');
+        msg = 'Este e-mail já está em uso. Tente fazer login ou use outro e-mail.';
       } else if (errorCode === 'auth/weak-password') {
-        setError('A senha deve ter pelo menos 6 caracteres.');
+        msg = 'A senha deve ter pelo menos 6 caracteres.';
       } else if (errorCode === 'auth/invalid-email') {
-        setError('E-mail inválido.');
+        msg = 'E-mail inválido.';
       } else if (errorCode === 'auth/user-disabled') {
-        setError('Esta conta foi desativada.');
-      } else {
-        setError('Ocorreu um erro ao processar sua solicitação. Tente novamente.');
+        msg = 'Esta conta foi desativada.';
       }
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setIsLoading(false);
     }

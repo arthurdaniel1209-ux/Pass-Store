@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, CartItem, Product, Order, UserRole, Notification, OrderStatus, CEOConfig } from '../types';
+import { User, CartItem, Product, Order, UserRole, Notification, OrderStatus, CEOConfig, Toast } from '../types';
 import { products as initialProducts, categories as initialCategories } from '../data/mockData';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -68,6 +68,9 @@ interface AppContextType {
   ceoConfig: CEOConfig | null;
   updateCEOConfig: (config: CEOConfig) => Promise<void>;
   isLoading: boolean;
+  toasts: Toast[];
+  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning', duration?: number) => void;
+  removeToast: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -79,6 +82,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [ceoConfig, setCeoConfig] = useState<CEOConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastToastsRef = React.useRef<Record<string, number>>({});
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success', duration = 3000) => {
+    const now = Date.now();
+    const lastTime = lastToastsRef.current[message];
+    
+    // Deduplicate exact same message if fired within 1000ms
+    if (lastTime && (now - lastTime) < 1000) {
+      return;
+    }
+    lastToastsRef.current[message] = now;
+
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts(prev => {
+      // Also check if this exact message is currently visible in the active toasts array
+      if (prev.some(t => t.message === message)) {
+        return prev;
+      }
+      return [...prev, { id, message, type, duration }];
+    });
+    
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
   
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('pass_cart');
@@ -339,10 +372,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { product, size, quantity }];
     });
+    showToast(`${product.name} (${size}) adicionado ao carrinho!`, 'success');
   };
 
   const removeFromCart = (productId: string, size: string) => {
-    setCart(prev => prev.filter(item => !(item.product.id === productId && item.size === size)));
+    setCart(prev => {
+      const item = prev.find(i => i.product.id === productId && i.size === size);
+      if (item) {
+        showToast(`${item.product.name} removido do carrinho.`, 'info');
+      }
+      return prev.filter(item => !(item.product.id === productId && item.size === size));
+    });
   };
 
   const updateCartQuantity = (productId: string, size: string, quantity: number) => {
@@ -357,14 +397,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ));
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    showToast('Carrinho esvaziado.', 'info');
+  };
 
   const toggleFavorite = (productId: string) => {
-    setFavorites(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId) 
-        : [...prev, productId]
-    );
+    setFavorites(prev => {
+      const isFav = prev.includes(productId);
+      const prd = products.find(p => p.id === productId);
+      const name = prd ? prd.name : "Visualizando";
+      if (isFav) {
+        showToast(`${name} removido dos favoritos.`, 'info');
+        return prev.filter(id => id !== productId);
+      } else {
+        showToast(`${name} adicionado aos favoritos!`, 'success');
+        return [...prev, productId];
+      }
+    });
   };
 
   const updateCEOConfig = async (config: CEOConfig) => {
@@ -391,7 +441,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notifications, markNotificationAsRead,
       favorites, toggleFavorite,
       ceoConfig, updateCEOConfig,
-      isLoading
+      isLoading,
+      toasts, showToast, removeToast
     }}>
       {children}
     </AppContext.Provider>

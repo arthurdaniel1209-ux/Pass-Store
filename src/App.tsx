@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AppProvider, useAppContext } from './context/AppContext';
 import { UserRole } from './types';
 import Loader from './components/Loader';
+import ToastContainer from './components/ToastContainer';
 
 // Lazy Load Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -59,6 +60,7 @@ function AppContent() {
 
   return (
     <Router>
+      <ToastContainer />
       <Suspense fallback={<Loader />}>
         <Routes>
           {/* Public Routes */}
