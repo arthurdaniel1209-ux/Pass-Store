@@ -527,7 +527,7 @@ export default function Checkout() {
                 {cart.map((item) => (
                   <div key={`${item.product.id}-${item.size}`} className="flex items-center gap-4 border-b border-white/5 pb-4 last:border-b-0 last:pb-0">
                     <div className="w-20 h-24 bg-white/5 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10">
-                      <img src={item.product.images[0]?.url || ''} alt={item.product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={item.product.images[0]?.url || null} alt={item.product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-black truncate uppercase tracking-tight text-white">{item.product.name}</h4>

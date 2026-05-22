@@ -27,21 +27,38 @@ export const db = initializeFirestore(
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
+// Configure extremely fast retry limits so we don't hang if the Storage bucket is not provisioned or active.
+// The default is 10 minutes, which causes severe UI lag; 2.5 seconds is ideal for safe local fallback.
+storage.maxUploadRetryTime = 2500;
+storage.maxOperationRetryTime = 2500;
+
+let isStorageHealthy = true;
+
 /**
  * Uploads a File or Blob directly to Firebase Storage
  */
 export async function uploadToStorage(file: File | Blob, folder: string): Promise<string> {
-  const fileId = Date.now() + '-' + Math.round(Math.random() * 1e9);
-  let extension = 'jpg';
-  if (file instanceof File) {
-    const parts = file.name.split('.');
-    if (parts.length > 1) {
-      extension = parts[parts.length - 1];
-    }
+  if (!isStorageHealthy) {
+    throw new Error("Skipping Firebase Storage (marked unhealthy): Falling back instantly to local upload");
   }
-  const fileRef = ref(storage, `${folder}/${fileId}.${extension}`);
-  const snapshot = await uploadBytes(fileRef, file);
-  return await getDownloadURL(snapshot.ref);
+
+  try {
+    const fileId = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    let extension = 'jpg';
+    if (file instanceof File) {
+      const parts = file.name.split('.');
+      if (parts.length > 1) {
+        extension = parts[parts.length - 1];
+      }
+    }
+    const fileRef = ref(storage, `${folder}/${fileId}.${extension}`);
+    const snapshot = await uploadBytes(fileRef, file);
+    return await getDownloadURL(snapshot.ref);
+  } catch (error) {
+    console.warn("Storage upload failed, marking Firebase Storage as unhealthy for this session:", error);
+    isStorageHealthy = false;
+    throw error;
+  }
 }
 
 // Auth Helpers

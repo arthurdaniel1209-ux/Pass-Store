@@ -291,9 +291,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [isLoading, user]);
 
+  const sanitizeProduct = (product: Product): any => {
+    const clean: any = {};
+    Object.keys(product).forEach(key => {
+      const val = (product as any)[key];
+      if (val !== undefined) {
+         clean[key] = val;
+      }
+    });
+    return clean;
+  };
+
   const addProduct = async (product: Product) => {
     try {
-      await setDoc(doc(db, 'products', product.id), product);
+      const cleanData = sanitizeProduct(product);
+      await setDoc(doc(db, 'products', product.id), cleanData);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, `products/${product.id}`);
     }
@@ -301,7 +313,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const updateProduct = async (product: Product) => {
     try {
-      await updateDoc(doc(db, 'products', product.id), { ...product });
+      const cleanData = sanitizeProduct(product);
+      await setDoc(doc(db, 'products', product.id), cleanData);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `products/${product.id}`);
     }

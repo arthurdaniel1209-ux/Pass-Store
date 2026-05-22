@@ -152,7 +152,7 @@ export default function ProductCard({ product, className = '', enableTilt = true
 
               {/* Render Primary Product Image */}
               <img 
-                src={product.images[0]?.url || ''} 
+                src={product.images[0]?.url || null} 
                 alt={product.name} 
                 loading="lazy"
                 className={cn(

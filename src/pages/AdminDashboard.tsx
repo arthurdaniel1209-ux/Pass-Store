@@ -6,7 +6,8 @@ import { Product, ProductImage } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Package, Plus, Edit3, Trash2, X, Check, Search, 
-  Image as ImageIcon, Tag, Hash, Archive, AlertCircle, ShoppingBag, Clock, Truck, CheckCircle2, User as UserIcon, MapPin, Upload
+  Image as ImageIcon, Tag, Hash, Archive, AlertCircle, ShoppingBag, Clock, Truck, CheckCircle2, User as UserIcon, MapPin, Upload,
+  ChevronLeft, ChevronRight, Link2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { compressImage } from '../lib/compressImage';
@@ -193,6 +194,71 @@ export default function AdminDashboard() {
       setProductUploading(false);
       e.target.value = '';
     }
+  };
+
+  // Image Drag-and-Drop and Reordering
+  const [isDragging, setIsDragging] = useState(false);
+  const [manualUrl, setManualUrl] = useState('');
+
+  const streetPresets = [
+    { name: 'Tee Essential', url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop' },
+    { name: 'Cargo Tech', url: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=1000&auto=format&fit=crop' },
+    { name: 'Hoodie Oversized', url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop' },
+    { name: 'Pass Cap', url: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=1000&auto=format&fit=crop' },
+    { name: 'Tee Black Model', url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=1000&auto=format&fit=crop' },
+  ];
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // Simulate standard ChangeEvent
+    const simulatedEvent = {
+      target: { files }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    
+    await handleProductImageUpload(simulatedEvent);
+  };
+
+  const handleAddImageUrl = (urlToAdd?: string) => {
+    const url = urlToAdd || manualUrl;
+    if (!url || !url.trim()) return;
+
+    const newImages = [...(formData.images || [])];
+    newImages.push({
+      id: Math.random().toString(),
+      product_id: '',
+      url: url.trim(),
+      is_primary: newImages.length === 0
+    });
+
+    setFormData({ ...formData, images: newImages });
+    if (!urlToAdd) setManualUrl('');
+    showNotification('Imagem adicionada com sucesso!', 'success');
+  };
+
+  const moveImage = (index: number, direction: 'left' | 'right') => {
+    const newImages = [...(formData.images || [])];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newImages.length) return;
+
+    // Swap indexes
+    const temp = newImages[index];
+    newImages[index] = newImages[targetIndex];
+    newImages[targetIndex] = temp;
+
+    setFormData({ ...formData, images: newImages });
   };
 
   // Form State
@@ -403,7 +469,12 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <h4 className="font-black text-slate-900 uppercase tracking-tight">{product.name}</h4>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.collection || 'Generic'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.collection || 'Generic'}</p>
+                              <span className="text-[8px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-black uppercase tracking-wider">
+                                {categories.find(c => c.id === product.category_id)?.name || 'Outro'}
+                              </span>
+                            </div>
                             {product.is_drop && <span className="inline-block mt-2 px-2 py-0.5 bg-accent/10 text-accent text-[8px] font-black uppercase rounded">Drop Ativo</span>}
                           </div>
                         </div>
@@ -451,7 +522,12 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{product.name}</h4>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{product.collection || 'Generic'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{product.collection || 'Generic'}</p>
+                            <span className="text-[8px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-black uppercase tracking-wider">
+                              {categories.find(c => c.id === product.category_id)?.name || 'Outro'}
+                            </span>
+                          </div>
                         </div>
                         <div className={cn(
                           "w-2.5 h-2.5 rounded-full mt-1",
@@ -783,6 +859,22 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Categoria</label>
+                        <div className="relative">
+                          <Tag className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                          <select 
+                            value={formData.category_id || categories[0].id}
+                            onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4.5 pl-14 pr-6 outline-none focus:bg-white focus:border-slate-900 transition-all font-semibold appearance-none cursor-pointer"
+                          >
+                            {categories.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Descrição</label>
                         <textarea 
                           rows={4} required
@@ -886,18 +978,76 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Enhanced Image Management */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Galeria de Imagens</label>
-                        <span className="text-[9px] text-slate-400 font-medium ml-1">Arraste fotos ou clique no botão para fazer upload</span>
+                  {/* Enhanced Image Management with Drag & Drop, URL and Presets */}
+                  <div className="space-y-8 border-t border-slate-100 pt-8">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Galeria de Imagens</label>
+                      <span className="text-[9px] text-slate-400 font-medium ml-1">Suba fotos locais, cole links públicos ou escolha um de nossos modelos streetwear de alta definição para testar rápido.</span>
+                    </div>
+
+                    {/* Predefinidos / Presets Shortcuts */}
+                    <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                      <div className="text-[8px] font-black uppercase tracking-wider text-slate-400">Inserção Rápida de Presets Streetwear Unsplash</div>
+                      <div className="flex flex-wrap gap-2.5">
+                        {streetPresets.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => handleAddImageUrl(preset.url)}
+                            className="bg-white hover:bg-slate-900 hover:text-white border border-slate-200/60 rounded-xl px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95"
+                          >
+                            + {preset.name}
+                          </button>
+                        ))}
                       </div>
+                    </div>
+
+                    {/* Manual Image URL Input */}
+                    <div className="flex gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <div className="flex-1 relative">
+                        <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                        <input
+                          type="text"
+                          placeholder="Colar URL de imagem direta do Unsplash..."
+                          value={manualUrl}
+                          onChange={(e) => setManualUrl(e.target.value)}
+                          className="w-full bg-white border border-slate-150 rounded-xl py-3 pl-12 pr-4 text-xs font-semibold outline-none focus:border-slate-900 transition-all font-mono"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddImageUrl()}
+                        className="bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-md cursor-pointer active:scale-95 shrink-0"
+                      >
+                        Adicionar Link
+                      </button>
+                    </div>
+
+                    {/* Drag-and-Drop Area & Upload Triggers */}
+                    <div 
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={cn(
+                        "border-2 border-dashed rounded-[2rem] p-8 transition-all flex flex-col items-center justify-center gap-6",
+                        isDragging 
+                          ? "border-slate-900 bg-slate-100/80 scale-[0.99] shadow-inner" 
+                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300"
+                      )}
+                    >
+                      <div className="flex flex-col items-center text-center gap-2">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-slate-100 text-slate-400 shadow-sm">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Arraste e solte arquivos aqui</p>
+                        <p className="text-[9px] text-slate-400 font-medium">Aceitamos arquivos JPG, PNG, WEBP comprimidos client-side</p>
+                      </div>
+
                       <div className="flex items-center gap-4">
                         {productUploading && (
-                          <div className="flex items-center gap-2 text-accent text-[9px] font-black uppercase tracking-widest animate-pulse">
-                            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
-                            Carregando...
+                          <div className="flex items-center gap-2 text-slate-900 text-[10.5px] font-black uppercase tracking-widest opacity-100">
+                            <span className="w-2.5 h-2.5 rounded-full bg-slate-900 animate-ping" />
+                            Fazendo Upload...
                           </div>
                         )}
                         <button 
@@ -905,10 +1055,10 @@ export default function AdminDashboard() {
                           onClick={() => {
                             document.getElementById('product-bulk-upload')?.click();
                           }}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
+                          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 shrink-0"
                         >
-                          <Upload className="w-3 h-3" />
-                          <span>Fazer Upload</span>
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Selecionar Arquivos</span>
                         </button>
                       </div>
                       {/* Hidden multi-file input */}
@@ -922,99 +1072,119 @@ export default function AdminDashboard() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      {(formData.images || []).map((img, i) => (
-                        <div key={img.id} className="group relative">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            id={`product-single-upload-${img.id}`} 
-                            className="hidden" 
-                            onChange={(e) => handleProductImageUpload(e, i)} 
-                          />
-                          
-                          <div className={cn(
-                            "aspect-[3/4] rounded-3xl overflow-hidden bg-slate-50 border-2 transition-all relative",
-                            img.is_primary ? "border-slate-900 shadow-xl shadow-slate-100" : "border-slate-100 hover:border-slate-300"
-                          )}>
-                            {img.url ? (
-                              <img src={img.url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => document.getElementById(`product-single-upload-${img.id}`)?.click()}
-                                className="w-full h-full flex flex-col items-center justify-center gap-2 hover:bg-slate-100/50 transition-colors"
-                              >
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                                  <Upload className="w-5 h-5" />
-                                </div>
-                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Selecionar Foto</span>
-                              </button>
-                            )}
-                            
-                            {/* Overlay Actions */}
-                            {img.url && (
-                              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 scale-95 group-hover:scale-100 transition-transform">
-                                {!img.is_primary && (
+                    {/* Images Sorted Grid with Controls */}
+                    {(formData.images || []).length > 0 && (
+                      <div className="space-y-4">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Fotos na Galeria (Arremate Visual)</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                          {(formData.images || []).map((img, i) => (
+                            <div key={img.id} className="group relative flex flex-col gap-2">
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                id={`product-single-upload-${img.id}`} 
+                                className="hidden" 
+                                onChange={(e) => handleProductImageUpload(e, i)} 
+                              />
+                              
+                              <div className={cn(
+                                "aspect-[3/4] rounded-3xl overflow-hidden bg-slate-50 border-2 transition-all relative",
+                                img.is_primary ? "border-slate-900 shadow-xl shadow-slate-200/50 scale-[1.02]" : "border-slate-100 hover:border-slate-300"
+                              )}>
+                                {img.url && (
+                                  <img src={img.url} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt="" />
+                                )}
+                                
+                                {/* Overlay hover actions */}
+                                <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
+                                  {/* Top Position: Primary button */}
+                                  {!img.is_primary && (
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        const newImages = (formData.images || []).map((image, index) => ({
+                                          ...image,
+                                          is_primary: index === i
+                                        }));
+                                        setFormData({ ...formData, images: newImages });
+                                      }}
+                                      className="bg-white text-slate-900 hover:bg-slate-100 rounded-xl px-4 py-2 text-[8px] font-black uppercase tracking-widest shadow-xl cursor-pointer hover:scale-105 transition-transform"
+                                    >
+                                      Destacar Principal
+                                    </button>
+                                  )}
+
+                                  {/* Delete button */}
                                   <button 
                                     type="button"
                                     onClick={() => {
-                                      const newImages = (formData.images || []).map((image, index) => ({
-                                        ...image,
-                                        is_primary: index === i
-                                      }));
+                                      const newImages = (formData.images || []).filter((_, index) => index !== i);
+                                      // If we deleted the primary, make the first item primary
+                                      if (img.is_primary && newImages.length > 0) {
+                                        newImages[0].is_primary = true;
+                                      }
                                       setFormData({ ...formData, images: newImages });
                                     }}
-                                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-900 shadow-xl hover:scale-110 transition-transform"
-                                    title="Definir como Principal"
+                                    className="bg-red-600 text-white hover:bg-red-700 p-2.5 rounded-full shadow-xl cursor-pointer hover:scale-110 transition-transform"
+                                    title="Remover Imagem"
                                   >
-                                    <Check className="w-4 h-4" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
+                                </div>
+
+                                {/* Main indicator badge */}
+                                {img.is_primary && (
+                                  <div className="absolute top-4 left-4 px-2 py-1 bg-slate-900 border border-slate-800 text-white rounded-lg text-[7px] font-black uppercase tracking-widest shadow-md">Principal</div>
                                 )}
-                                <button 
+
+                                {/* Image index badge */}
+                                <div className="absolute bottom-4 right-4 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center text-[8px] font-mono font-bold border border-white/20">
+                                  {i + 1}
+                                </div>
+                              </div>
+
+                              {/* Reorder and Modify Controls */}
+                              <div className="flex gap-1.5 items-center justify-between">
+                                <div className="flex gap-1">
+                                  <button
+                                    type="button"
+                                    disabled={i === 0}
+                                    onClick={() => moveImage(i, 'left')}
+                                    className={cn(
+                                      "p-2 bg-slate-50 hover:bg-slate-100 border border-slate-150 rounded-lg transition-colors cursor-pointer",
+                                      i === 0 && "opacity-30 cursor-not-allowed"
+                                    )}
+                                    title="Mover para esquerda"
+                                  >
+                                    <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={i === (formData.images || []).length - 1}
+                                    onClick={() => moveImage(i, 'right')}
+                                    className={cn(
+                                      "p-2 bg-slate-50 hover:bg-slate-100 border border-slate-150 rounded-lg transition-colors cursor-pointer",
+                                      i === (formData.images || []).length - 1 && "opacity-30 cursor-not-allowed"
+                                    )}
+                                    title="Mover para direita"
+                                  >
+                                    <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                                  </button>
+                                </div>
+
+                                <button
                                   type="button"
-                                  onClick={() => {
-                                    const newImages = (formData.images || []).filter((_, index) => index !== i);
-                                    setFormData({ ...formData, images: newImages });
-                                  }}
-                                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 shadow-xl hover:scale-110 transition-transform"
-                                  title="Remover"
+                                  onClick={() => document.getElementById(`product-single-upload-${img.id}`)?.click()}
+                                  className="bg-slate-50 hover:bg-slate-100 border border-slate-150 text-slate-600 rounded-lg px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider transition-colors"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  Alterar
                                 </button>
                               </div>
-                            )}
-
-                            {img.is_primary && (
-                              <div className="absolute top-4 left-4 px-2 py-1 bg-slate-900 text-white rounded-lg text-[7px] font-black uppercase tracking-widest">Principal</div>
-                            )}
-                          </div>
-                          
-                          {img.url && (
-                            <button
-                              type="button"
-                              onClick={() => document.getElementById(`product-single-upload-${img.id}`)?.click()}
-                              className="mt-3 w-full bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl py-2 px-3 text-[9px] font-black uppercase tracking-widest text-slate-500 transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                            >
-                              <Upload className="w-3 h-3" />
-                              <span>Alterar Foto</span>
-                            </button>
-                          )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-
-                      {/* Nova Imagem quick trigger button */}
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          document.getElementById('product-bulk-upload')?.click();
-                        }}
-                        className="aspect-[3/4] bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center gap-3 group hover:bg-slate-100/50 transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-8 h-8 text-slate-200 group-hover:scale-110 transition-transform" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">Carregar Foto(s)</span>
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>
