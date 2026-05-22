@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, Minus, Plus, ArrowRight, ShoppingBag, Tag, ChevronLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { GlassButton } from '../components/ui/GlassButton';
 
 export default function Cart() {
   const { cart, removeFromCart, updateCartQuantity } = useAppContext();
@@ -143,13 +144,15 @@ export default function Cart() {
               </button>
             </div>
 
-            <button 
+            <GlassButton 
               onClick={() => navigate('/checkout')}
-              className="w-full bg-black text-white rounded-2xl py-6 font-black uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-neutral-800 transition-all shadow-xl active:scale-95 group"
+              wrapperClassName="w-full"
+              className="py-6"
+              labelClassName="tracking-widest uppercase font-black text-xs gap-4 text-slate-900"
             >
               Finalizar Pedido
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-slate-900" />
+            </GlassButton>
             
             <p className="mt-8 text-center text-[10px] text-neutral-400 font-medium uppercase tracking-[0.2em] max-w-[200px] mx-auto leading-relaxed">
               Dúvidas sobre o pedido? Fale com nosso suporte.

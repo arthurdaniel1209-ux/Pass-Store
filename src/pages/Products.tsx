@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import GradientBlinds from '../components/GradientBlinds';
 import { categories } from '../data/mockData';
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Filter, ChevronDown, Grid, List as ListIcon, SlidersHorizontal, Package, Tag, FilterX, Star, ArrowRight, Zap } from 'lucide-react';
+import { Filter, ChevronDown, Grid, List as ListIcon, SlidersHorizontal, Package, Tag, FilterX } from 'lucide-react';
 import { cn } from '../lib/utils';
+import ProductCard from '../components/ProductCard';
 
 export default function Products() {
   const { products } = useAppContext();
@@ -266,93 +266,9 @@ export default function Products() {
                 key={product.id} 
                 layout
                 variants={itemVariants}
-                className="group active:scale-[0.98] transition-transform max-w-md md:max-w-none mx-auto w-full"
+                className="max-w-md md:max-w-none mx-auto w-full"
               >
-                <Link to={`/produtos/${product.id}`} className="block h-full flex flex-col">
-                  {/* Subtle pulsing background effect under the card if it's a drop */}
-                  <div className={cn(
-                    "relative aspect-[3/4] bg-white rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden mb-6 sm:mb-10 border transition-all duration-700 ease-[0.16, 1, 0.3, 1] group-hover:-translate-y-4",
-                    product.is_drop 
-                      ? "border-violet-500/50 shadow-[0_20px_50px_rgba(82,39,255,0.15)] group-hover:shadow-[0_50px_100px_-20px_rgba(168,85,247,0.35)] ring-2 ring-violet-500/20 group-hover:border-pink-400 group-hover:ring-pink-500/30" 
-                      : "border-slate-100 shadow-2xl shadow-slate-200/50 group-hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)]"
-                  )}>
-                    {product.is_drop && (
-                      <div className="absolute inset-0 z-0 overflow-hidden rounded-[2rem] sm:rounded-[3.5rem] opacity-30 group-hover:opacity-50 transition-opacity duration-700">
-                        <GradientBlinds
-                          gradientColors={["#FF9FFC", "#5227FF"]}
-                          angle={0}
-                          noise={0.3}
-                          blindCount={16}
-                          blindMinWidth={60}
-                          mouseDampening={0.15}
-                          mirrorGradient
-                          spotlightRadius={0.5}
-                          spotlightSoftness={1}
-                          spotlightOpacity={1}
-                          distortAmount={6}
-                          shineDirection="left"
-                        />
-                      </div>
-                    )}
-                    <img 
-                      src={product.images[0]?.url || null} 
-                      alt={product.name} 
-                      className={cn(
-                        "w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out pointer-events-none relative z-10",
-                        product.is_drop && "mix-blend-multiply opacity-90 group-hover:opacity-20 transition-all duration-700"
-                      )}
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 flex flex-col gap-2 pointer-events-none z-20">
-                      {product.is_drop ? (
-                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-[#5227FF] to-[#FF9FFC] text-white px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(82,39,255,0.4)] backdrop-blur-md animate-pulse">
-                          <Zap className="w-2.5 h-2.5 fill-current text-white shrink-0 animate-bounce" />
-                          <span>DROP EXCLUSIVO</span>
-                        </div>
-                      ) : null}
-                    </div>
-                    {/* Unique overlay for Drop items */}
-                    <div className={cn(
-                      "absolute inset-0 transition-opacity duration-700 pointer-events-none z-20",
-                      product.is_drop 
-                        ? "bg-gradient-to-t from-violet-950/20 via-transparent to-transparent opacity-0 group-hover:opacity-100"
-                        : "bg-slate-900/20 opacity-0 group-hover:opacity-100"
-                    )}></div>
-                  </div>
-                  <div className="px-3 sm:px-4">
-                    <div className="flex items-center gap-3 mb-2 sm:mb-4">
-                      {product.is_drop ? (
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-[#5227FF] flex items-center gap-1">
-                          <Zap className="w-2.5 h-2.5 fill-current text-[#5227FF]" />
-                          {product.collection || 'Drop'}
-                        </span>
-                      ) : (
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">{product.collection}</span>
-                      )}
-                      <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                      <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(s => <Star key={s} className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-slate-900 fill-current opacity-20 group-hover:opacity-100 transition-opacity" />)}
-                      </div>
-                    </div>
-                    <h3 className={cn(
-                      "text-xl sm:text-2xl font-black tracking-tighter transition-colors duration-300 leading-[0.9] uppercase font-display italic text-slate-900 mb-4 sm:mb-6 max-w-[200px]",
-                      product.is_drop ? "group-hover:text-[#5227FF]" : "group-hover:text-accent"
-                    )}>
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center justify-between border-t border-slate-50 pt-4 sm:pt-6">
-                      <span className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900">R$ {product.price.toFixed(2)}</span>
-                      <div className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white border flex items-center justify-center transition-all duration-500 group-hover:text-white group-hover:rotate-12",
-                        product.is_drop
-                          ? "border-violet-100 text-violet-500 group-hover:bg-[#5227FF] group-hover:border-[#5227FF]"
-                          : "border-slate-100 text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900"
-                      )}>
-                        <ArrowRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <ProductCard product={product} />
               </motion.div>
             ))}
           </motion.div>

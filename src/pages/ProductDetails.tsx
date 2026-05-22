@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, Heart, Star, Minus, Plus, ChevronLeft, ShieldCheck, Truck, RefreshCcw, Sparkles } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { cn } from '../lib/utils';
+import { GlassButton } from '../components/ui/GlassButton';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -216,15 +217,15 @@ export default function ProductDetails() {
               </button>
             </div>
 
-            <button 
+            <GlassButton 
               onClick={handleAddToCart}
-              className="flex-1 h-[72px] bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-5 hover:bg-black transition-all shadow-2xl shadow-slate-200 active:scale-95 group"
+              wrapperClassName="flex-1"
+              className="h-[72px]"
+              labelClassName="tracking-[0.3em] font-black text-[11px] gap-4"
             >
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-accent transition-colors">
-                <ShoppingBag className="w-4 h-4" />
-              </div>
+              <ShoppingBag className="w-4 h-4" />
               Adicionar ao Carrinho
-            </button>
+            </GlassButton>
           </motion.div>
 
           <motion.div variants={itemVariants} className="grid grid-cols-3 gap-6 pt-12 border-t border-slate-100">

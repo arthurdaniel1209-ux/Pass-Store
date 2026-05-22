@@ -7,6 +7,7 @@ import { ArrowRight, Star, TrendingUp, Sparkles, Package, Instagram } from 'luci
 import { cn } from '../lib/utils';
 import ScrollReveal from '../components/ScrollReveal';
 import GradientBlinds from '../components/GradientBlinds';
+import ProductCard from '../components/ProductCard';
 
 const ProfileCard = lazy(() => import('../components/ProfileCard'));
 const LineWaves = lazy(() => import('../components/LineWaves'));
@@ -131,42 +132,8 @@ export default function Home() {
           className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-14"
         >
           {newLançamentos.map((product) => (
-            <motion.div key={product.id} variants={itemVariants} className="group flex flex-col h-full active:scale-[0.98] transition-transform">
-              <Link to={`/produtos/${product.id}`} className="flex-1 flex flex-col">
-                <div className="relative aspect-[3/4] bg-white rounded-[3rem] overflow-hidden mb-8 border border-slate-100 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] transition-all duration-700 ease-[0.16, 1, 0.3, 1]">
-                  <img 
-                    src={product.images[0]?.url || null} 
-                    alt={product.name} 
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.2s] ease-out"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    {product.is_drop && (
-                      <div className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md">
-                        Drop Limitado
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-slate-900 opacity-0 group-hover:opacity-5 transition-opacity duration-700"></div>
-                </div>
-                <div className="px-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{product.collection}</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-400 fill-current opacity-40 group-hover:opacity-100 transition-opacity" />)}
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-black tracking-tighter uppercase font-display italic text-slate-900 mb-4 group-hover:text-accent transition-colors duration-300 leading-none">{product.name}</h3>
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className="text-2xl font-black tracking-tighter text-slate-900">R$ {product.price.toFixed(2)}</span>
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 group-hover:rotate-12 transition-all duration-500">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
+            <motion.div key={product.id} variants={itemVariants}>
+              <ProductCard product={product} />
             </motion.div>
           ))}
         </motion.div>
@@ -248,51 +215,9 @@ export default function Home() {
                   <motion.div 
                     key={product.id}
                     id={`drop-product-card-${product.id}`}
-                    whileHover={{ y: -6 }}
-                    className="bg-slate-900/40 border border-slate-900 rounded-[2.5rem] p-5 hover:border-slate-800 hover:bg-slate-900/80 transition-all duration-300 flex flex-col justify-between group h-full"
+                    className="w-full"
                   >
-                    <Link to={`/produtos/${product.id}`} className="space-y-4 flex flex-col h-full justify-between">
-                      {/* Product Image */}
-                      <div className="relative aspect-[3/4] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800/80">
-                        {product.images?.[0]?.url ? (
-                          <img 
-                            src={product.images[0].url} 
-                            alt={product.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-slate-900">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Sem Foto</span>
-                          </div>
-                        )}
-                        <span className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md text-[#FE3A4A] border border-[#FE3A4A]/20 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest">
-                          R$ {product.price.toFixed(2)}
-                        </span>
-                      </div>
-
-                      {/* Info & Buy Button */}
-                      <div className="space-y-3 pt-2">
-                        <div className="space-y-1">
-                          <h3 className="text-xl font-black text-white uppercase italic tracking-tighter leading-none group-hover:text-accent transition-colors">
-                            {product.name}
-                          </h3>
-                          <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                            {product.sizes ? `Tamanhos: ${product.sizes.join(', ')}` : 'Tamanho Único'}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-900">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5">
-                            Comprar Agora <ArrowRight className="w-3 h-3 text-accent" />
-                          </span>
-                          <span className="text-[8px] font-black uppercase tracking-widest text-accent/80">
-                            Disponível
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                    <ProductCard product={product} />
                   </motion.div>
                 ))}
               </div>

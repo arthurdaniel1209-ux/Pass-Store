@@ -1,0 +1,157 @@
+/******************************************************************
+ * ProductCard.css
+ * High-fidelity 3D tilt & glare animation styles for product cards.
+ * Inspired by the premium ProfileCard look.
+ ******************************************************************/
+
+:root {
+  --prod-pointer-x: 50%;
+  --prod-pointer-y: 50%;
+  --prod-pointer-from-center: 0;
+  --prod-pointer-from-top: 0.5;
+  --prod-pointer-from-left: 0.5;
+  --prod-card-opacity: 0;
+  --prod-rotate-x: 0deg;
+  --prod-rotate-y: 0deg;
+  --prod-background-x: 50%;
+  --prod-background-y: 50%;
+  --prod-behind-glow-color: rgba(99, 102, 241, 0.15); /* Indigo glow */
+  --prod-behind-glow-size: 55%;
+}
+
+.prod-card-wrapper {
+  perspective: 1000px;
+  transform: translate3d(0, 0, 0.1px);
+  position: relative;
+  touch-action: none;
+  width: 100%;
+}
+
+.prod-behind {
+  position: absolute;
+  inset: -10px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--prod-pointer-x) var(--prod-pointer-y),
+    var(--prod-behind-glow-color) 0%,
+    transparent var(--prod-behind-glow-size)
+  );
+  filter: blur(40px) saturate(1.2);
+  opacity: calc(0.85 * var(--prod-card-opacity));
+  transition: opacity 300ms ease;
+}
+
+.prod-card-wrapper:hover,
+.prod-card-wrapper.active {
+  --prod-card-opacity: 1;
+}
+
+.prod-card-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.prod-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+  transform: translateZ(0) rotateX(0deg) rotateY(0deg);
+  backface-visibility: hidden;
+  overflow: visible; /* Let badges float cleanly if needed, or keep hidden within inner card */
+}
+
+/* On hover, apply the reactive tilt angle */
+.prod-card-wrapper:hover .prod-card,
+.prod-card-wrapper.active .prod-card {
+  transition: transform 0.12s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: translate3d(0, -6px, 15px) rotateX(var(--prod-rotate-y)) rotateY(var(--prod-rotate-x));
+}
+
+.prod-inside {
+  position: relative;
+  width: 100%;
+  border-radius: 2rem;
+  overflow: hidden;
+  background: var(--card-bg, rgba(255, 255, 255, 1));
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
+  transform-style: preserve-3d;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.prod-card-wrapper:hover .prod-inside {
+  box-shadow: 0 40px 80px -20px rgba(15, 23, 42, 0.12),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Glass glare overlay */
+.prod-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background-image: radial-gradient(
+    farthest-corner circle at var(--prod-pointer-x) var(--prod-pointer-y),
+    rgba(255, 255, 255, 0.15) 8%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(0, 0, 0, 0.18) 120%
+  );
+  mix-blend-mode: overlay;
+  opacity: var(--prod-card-opacity);
+  transition: opacity 300ms ease;
+  will-change: opacity, pointer-events;
+}
+
+/* Holographic shiny pattern for Drops */
+.prod-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  mix-blend-mode: color-dodge;
+  opacity: calc(0.7 * var(--prod-card-opacity));
+  transition: opacity 300ms ease;
+  will-change: opacity;
+  background-image:
+    repeating-linear-gradient(
+      -45deg,
+      hsl(283, 100%, 73%) 0%,
+      hsl(228, 100%, 74%) 10%,
+      hsl(176, 100%, 76%) 20%,
+      hsl(93, 100%, 69%) 30%,
+      hsl(53, 100%, 69%) 40%,
+      hsl(2, 100%, 73%) 50%,
+      hsl(283, 100%, 73%) 60%
+    ),
+    radial-gradient(
+      farthest-corner circle at var(--prod-pointer-x) var(--prod-pointer-y),
+      hsla(0, 0%, 100%, 0.3) 10%,
+      hsla(0, 0%, 100%, 0) 50%
+    );
+  background-size: 300% 300%, cover;
+  background-position: calc(var(--prod-background-x) * 0.5) calc(var(--prod-background-y) * 0.5), center;
+  background-blend-mode: color-dodge;
+}
+
+/* Micro-scanlines overlay for the retro-tech premium feel */
+.prod-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.03;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 1px,
+    transparent 2px
+  );
+  background-size: 100% 4px;
+}
+
+@media (max-width: 640px) {
+  .prod-inside {
+    border-radius: 1.75rem;
+  }
+}

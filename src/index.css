@@ -150,3 +150,510 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -75deg;
+}
+@property --shine-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -45deg;
+}
+
+.glass-btn-wrapper {
+  position: relative;
+  z-index: 2;
+  border-radius: 999vw;
+  background: transparent;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glass-btn-wrapper:has(.glass-btn:active) {
+  transform: rotate3d(1, 0, 0, 15deg);
+}
+
+.glass-btn-shadow {
+  --cutoff: 2em;
+  position: absolute;
+  width: calc(100% + var(--cutoff));
+  height: calc(100% + var(--cutoff));
+  top: calc(0% - var(--cutoff) / 2);
+  left: calc(0% - var(--cutoff) / 2);
+  filter: blur(10px);
+  overflow: visible;
+  pointer-events: none;
+}
+.glass-btn-shadow::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: 999vw;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
+  width: calc(100% - var(--cutoff) - 0.25em);
+  height: calc(100% - var(--cutoff) - 0.25em);
+  top: calc(var(--cutoff) - 0.5em);
+  left: calc(var(--cutoff) - 0.875em);
+  padding: 0.125em;
+  box-sizing: border-box;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  opacity: 1;
+}
+
+.glass-btn-wrapper:has(.glass-btn:hover) .glass-btn-shadow {
+  filter: blur(6px);
+  transition: filter 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glass-btn-wrapper:has(.glass-btn:hover) .glass-btn-shadow::after {
+  top: calc(var(--cutoff) - 0.7em);
+  opacity: 1;
+}
+.glass-btn-wrapper:has(.glass-btn:active) .glass-btn-shadow {
+  filter: blur(10px);
+}
+.glass-btn-wrapper:has(.glass-btn:active) .glass-btn-shadow::after {
+  top: calc(var(--cutoff) - 0.5em);
+  opacity: 0.75;
+}
+
+.glass-btn {
+  all: unset;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  pointer-events: auto;
+  z-index: 3;
+  border-radius: 999vw;
+  background: linear-gradient(
+    -75deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.08)
+  );
+  box-shadow:
+    inset 0 0.125em 0.125em rgba(0,0,0,0.03),
+    inset 0 -0.125em 0.125em rgba(255,255,255,0.35),
+    0 0.25em 0.125em -0.125em rgba(0,0,0,0.12),
+    0 0 0.1em 0.25em inset rgba(255,255,255,0.15),
+    0 0 0 0 rgba(255,255,255,1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1), --border-angle 500ms ease;
+}
+.glass-btn:hover {
+  transform: scale(0.975);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-shadow:
+    inset 0 0.125em 0.125em rgba(0,0,0,0.03),
+    inset 0 -0.125em 0.125em rgba(255,255,255,0.35),
+    0 0.15em 0.05em -0.1em rgba(0,0,0,0.18),
+    0 0 0.05em 0.1em inset rgba(255,255,255,0.35),
+    0 0 0 0 rgba(255,255,255,1);
+}
+.glass-btn:active {
+  box-shadow:
+    inset 0 0.125em 0.125em rgba(0,0,0,0.03),
+    inset 0 -0.125em 0.125em rgba(255,255,255,0.35),
+    0 0.125em 0.125em -0.125em rgba(0,0,0,0.12),
+    0 0 0.1em 0.25em inset rgba(255,255,255,0.15),
+    0 0.225em 0.05em 0 rgba(0,0,0,0.03),
+    0 0.25em 0 0 rgba(255,255,255,0.6),
+    inset 0 0.25em 0.05em 0 rgba(0,0,0,0.1);
+}
+
+.glass-btn::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: 999vw;
+  width: calc(100% + var(--bw, 2px));
+  height: calc(100% + var(--bw, 2px));
+  top: calc(0% - var(--bw, 2px) / 2);
+  left: calc(0% - var(--bw, 2px) / 2);
+  padding: var(--bw, 2px);
+  box-sizing: border-box;
+  background:
+    conic-gradient(
+      from var(--border-angle) at 50% 50%,
+      rgba(0,0,0,0.25),
+      rgba(0,0,0,0) 5% 40%,
+      rgba(0,0,0,0.25) 50%,
+      rgba(0,0,0,0) 60% 95%,
+      rgba(0,0,0,0.25)
+    ),
+    linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.45));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1), --border-angle 500ms ease;
+  box-shadow: inset 0 0 0 calc(var(--bw, 2px) / 2) rgba(255,255,255,0.4);
+}
+.glass-btn:hover::after  { --border-angle: -125deg; }
+.glass-btn:active::after { --border-angle: -75deg; }
+
+@media (hover: none) and (pointer: coarse) {
+  .glass-btn::after,
+  .glass-btn:hover::after,
+  .glass-btn:active::after { --border-angle: -75deg; }
+}
+
+.glass-btn__label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  font-family: var(--font-sans), "Inter", sans-serif;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-shadow: 0em 0.1em 0.05em rgba(255,255,255,0.2);
+  padding-inline: 2.25em;
+  padding-block: 1em;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glass-btn:hover .glass-btn__label {
+  text-shadow: 0.025em 0.025em 0.025em rgba(255,255,255,0.15);
+}
+.glass-btn:active .glass-btn__label {
+  text-shadow: 0.025em 0.1em 0.035em rgba(255,255,255,0.15);
+}
+
+.glass-btn__label::after {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: 3;
+  width: calc(100% - var(--bw, 2px));
+  height: calc(100% - var(--bw, 2px));
+  top: calc(0% + var(--bw, 2px) / 2);
+  left: calc(0% + var(--bw, 2px) / 2);
+  box-sizing: border-box;
+  border-radius: 999vw;
+  overflow: clip;
+  background: linear-gradient(
+    var(--shine-angle),
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.4) 40% 50%,
+    rgba(255,255,255,0) 55%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  transition:
+    background-position 500ms cubic-bezier(0.25, 1, 0.5, 1),
+    --shine-angle 500ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glass-btn:hover .glass-btn__label::after {
+  background-position: 25% 50%;
+}
+.glass-btn:active .glass-btn__label::after {
+  background-position: 50% 15%;
+  --shine-angle: -15deg;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .glass-btn__label::after,
+  .glass-btn:active .glass-btn__label::after { --shine-angle: -45deg; }
+}
+
+/* Dispatch Button styles */
+.ship-btn {
+  --b-dark:  #0f172a;
+  --b-blue:  #3b82f6;
+  --b-bll:   #93c5fd;
+  --b-grey:  #64748b;
+  --b-gd:    #475569;
+  --b-gl:    #cbd5e1;
+  --b-green: #10b981;
+  --b-sand:  #f59e0b;
+  --b-sandl: #fef08a;
+
+  appearance: none;
+  border: 0;
+  background: var(--b-dark);
+  position: relative;
+  height: 63px;
+  width: 240px;
+  padding: 0;
+  outline: none;
+  cursor: pointer;
+  border-radius: 32px;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+  transition: transform .4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.ship-btn:hover {
+  transform: scale(0.98);
+}
+.ship-btn:active {
+  transform: scale(0.95);
+}
+
+.ship-btn.go {
+  pointer-events: none;
+  cursor: default;
+}
+
+.ship-btn .lbl {
+  --o: 1;
+  position: absolute;
+  left: 0; right: 0;
+  text-align: center;
+  top: 19px;
+  line-height: 24px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: var(--o);
+  transition: opacity .4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.ship-btn .lbl.idle { transition-delay: .3s; }
+.ship-btn .lbl.done { --o: 0; }
+.ship-btn .lbl.done svg {
+  width: 12px; height: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  margin: -2px 0 0 4px;
+  stroke: var(--b-green);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16px;
+  stroke-dashoffset: 16px;
+  transition: stroke-dashoffset .4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ship-btn .rail {
+  opacity: 0;
+  position: absolute;
+  height: 3px;
+  background: #fff;
+  border-radius: 2px;
+  width: 6px;
+  top: 30px;
+  left: 100%;
+  box-shadow:
+     15px 0 0 #fff,  30px 0 0 #fff,  45px 0 0 #fff,  60px 0 0 #fff,
+     75px 0 0 #fff,  90px 0 0 #fff, 105px 0 0 #fff, 120px 0 0 #fff,
+    135px 0 0 #fff, 150px 0 0 #fff, 165px 0 0 #fff, 180px 0 0 #fff,
+    195px 0 0 #fff, 210px 0 0 #fff, 225px 0 0 #fff, 240px 0 0 #fff,
+    255px 0 0 #fff, 270px 0 0 #fff, 285px 0 0 #fff, 300px 0 0 #fff,
+    315px 0 0 #fff, 330px 0 0 #fff;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.ship-btn .cargo {
+  background: linear-gradient(var(--b-sandl), var(--b-sand));
+  width: 21px; height: 21px;
+  right: 100%; top: 21px;
+  border-radius: 2px;
+  position: absolute;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.ship-btn .cargo::before,
+.ship-btn .cargo::after {
+  content: ''; top: 10px;
+  position: absolute; left: 0; right: 0;
+}
+.ship-btn .cargo::before { height: 3px; margin-top: -1px; background: rgba(0,0,0,.1); }
+.ship-btn .cargo::after  { height: 1px; background: rgba(0,0,0,.15); }
+
+.ship-btn .vehicle {
+  width: 60px; height: 41px;
+  left: 100%; z-index: 1;
+  top: 11px; position: absolute;
+  transform: translate3d(24px, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.ship-btn .vehicle::before,
+.ship-btn .vehicle::after {
+  --r: -90deg;
+  content: '';
+  height: 2px; width: 20px;
+  right: 58px; position: absolute;
+  display: block; background: #fff;
+  border-radius: 1px;
+  transform-origin: 100% 50%;
+  transform: rotate(var(--r));
+}
+.ship-btn .vehicle::before { top: 4px; }
+.ship-btn .vehicle::after  { --r: 90deg; bottom: 4px; }
+
+.ship-btn .cab-back {
+  background: linear-gradient(#fff, var(--b-gl));
+  left: 0; top: 0;
+  width: 60px; height: 41px;
+  z-index: 1; border-radius: 2px;
+  position: absolute;
+}
+.ship-btn .cab-front {
+  overflow: hidden; position: absolute;
+  border-radius: 2px 9px 9px 2px;
+  width: 26px; height: 41px; left: 60px;
+}
+.ship-btn .cab-front::before,
+.ship-btn .cab-front::after {
+  content: ''; position: absolute; display: block;
+}
+.ship-btn .cab-front::before {
+  height: 13px; width: 2px; left: 0; top: 14px;
+  background: linear-gradient(var(--b-grey), var(--b-gd));
+}
+.ship-btn .cab-front::after {
+  border-radius: 2px 9px 9px 2px;
+  background: var(--b-blue);
+  width: 24px; height: 41px; right: 0;
+}
+
+.ship-btn .windshield {
+  overflow: hidden;
+  border-radius: 2px 8px 8px 2px;
+  background: var(--b-bll);
+  transform: perspective(4px) rotateY(3deg);
+  width: 22px; height: 41px;
+  position: absolute; left: 2px; top: 0;
+  z-index: 1; transform-origin: 0 50%;
+}
+.ship-btn .windshield::before,
+.ship-btn .windshield::after {
+  content: ''; position: absolute; right: 0;
+}
+.ship-btn .windshield::before {
+  top: 0; bottom: 0; width: 14px;
+  background: var(--b-dark);
+}
+.ship-btn .windshield::after {
+  width: 14px; top: 7px; height: 4px;
+  background: rgba(255,255,255,.14);
+  transform: skewY(14deg);
+  box-shadow: 0 7px 0 rgba(255,255,255,.14);
+}
+
+.ship-btn .headlight {
+  width: 3px; height: 8px; left: 83px;
+  transform-origin: 100% 50%;
+  position: absolute; border-radius: 2px;
+  transform: scaleX(.8);
+  background: rgba(240,220,95,1);
+}
+.ship-btn .headlight::before {
+  content: '';
+  height: 4px; width: 7px; opacity: 0;
+  transform: perspective(2px) rotateY(-15deg) scaleX(.94);
+  position: absolute; transform-origin: 0 50%;
+  left: 3px; top: 50%; margin-top: -2px;
+  background: linear-gradient(90deg,
+    rgba(240,220,95,1), rgba(240,220,95,.7), rgba(240,220,95,0));
+  will-change: opacity, transform;
+}
+.ship-btn .headlight.top    { top: 4px; }
+.ship-btn .headlight.bottom { bottom: 4px; }
+
+/* ── animated state ── */
+.ship-btn.go .lbl.idle          { --o: 0; transition-delay: 0s; }
+.ship-btn.go .lbl.done          { --o: 1; transition-delay: 7s; }
+.ship-btn.go .lbl.done svg      { stroke-dashoffset: 0; transition-delay: 7.3s; }
+.ship-btn.go .vehicle           { animation: veh    10s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+.ship-btn.go .vehicle::before   { animation: hatch1  2.4s cubic-bezier(0.25, 1, 0.5, 1) forwards .3s; }
+.ship-btn.go .vehicle::after    { animation: hatch2  2.4s cubic-bezier(0.25, 1, 0.5, 1) forwards .6s; }
+.ship-btn.go .headlight::before { animation: glow   10s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+.ship-btn.go .cargo             { animation: pkg    10s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+.ship-btn.go .rail              { animation: rails  10s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+@keyframes veh {
+  0%       { transform: translate3d(24px, 0, 0); }
+  10%, 30% { transform: translate3d(-164px, 0, 0); }
+  40%      { transform: translate3d(-104px, 0, 0); }
+  60%      { transform: translate3d(-224px, 0, 0); }
+  75%, 100%{ transform: translate3d(24px, 0, 0);  }
+}
+@keyframes rails {
+  0%,  30% { opacity: 0; transform: scaleY(.7) translate3d(0, 0, 0);    }
+  35%, 65% { opacity: 1; transform: scaleY(.7) translate3d(0, 0, 0);    }
+  70%      { opacity: 0;  transform: scaleY(.7) translate3d(0, 0, 0);    }
+  100%     { opacity: 0;  transform: scaleY(.7) translate3d(-400px, 0, 0); }
+}
+@keyframes glow {
+  0%,  30% { opacity: 0; transform: perspective(2px) rotateY(-15deg) scaleX(.88); }
+  40%, 100%{ opacity: 1; transform: perspective(2px) rotateY(-15deg) scaleX(.94); }
+}
+@keyframes hatch1 { 30%, 50% { transform: rotate(32deg);  } }
+@keyframes hatch2 { 30%, 50% { transform: rotate(-32deg); } }
+@keyframes pkg {
+  0%       { transform: translate3d(0, 0, 0); opacity: 0; }
+  8%,  10% { transform: translate3d(40px, 0, 0);  opacity: 1; }
+  25%      { transform: translate3d(112px, 0, 0); opacity: 1; }
+  26%      { transform: translate3d(112px, 0, 0); opacity: 0; }
+  27%, 100%{ transform: translate3d(0, 0, 0);     opacity: 0; }
+}
+
+/* Credit Card interactive styles */
+.card-scene {
+  perspective: 1000px;
+}
+
+.card-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes aurora {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(25px, -15px) scale(1.08);
+  }
+}
