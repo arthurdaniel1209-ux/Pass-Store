@@ -25,7 +25,10 @@ export default function Login() {
       showToast('Bem-vindo(a) à PASS!', 'success');
       navigate('/home');
     } catch (err: any) {
-      console.error(err);
+      // Sanitize client-side error outputs to prevent any accidental leakage of credentials or auth metadata in environments
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const sanitizedMsg = errorMsg.replace(/password|pass|secret|token/gi, "[REDACTED]");
+      console.warn("[Auth] Falha na autenticação Google:", sanitizedMsg);
       const msg = 'Erro ao entrar com Google. Tente novamente.';
       setError(msg);
       showToast(msg, 'error');
@@ -59,9 +62,11 @@ export default function Login() {
         }
       }
     } catch (err: any) {
-      console.error(err);
+      // Clear raw traces containing credentials to safeguard credentials leakage in browser logs
       const errorCode = err.code || '';
-      const errorMessage = err.message || '';
+      const errorMessage = typeof err.message === 'string' ? err.message : String(err);
+      const sanitizedMsg = errorMessage.replace(/password|pass|secret|token/gi, "[REDACTED]");
+      console.warn("[Auth] Falha na autenticação por E-mail:", sanitizedMsg);
       let msg = 'Ocorreu um erro ao processar sua solicitação. Tente novamente.';
       
       if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential' || errorMessage.includes('auth/invalid-credential')) {
